@@ -13,10 +13,10 @@
   "author": "zoh <zoh@bk.ru>",
   "license": "MIT",
   "dependencies": {
-    "agentkeepalive": "^2.0.2",
-    "lodash": "~2.4.1",
-    "mocha": "~2.1.0",
-    "request": "~2.51.0"
+    "agentkeepalive": "^4.1.0",
+    "lodash": "^4.17.15",
+    "mocha": "^7.0.0",
+    "request": "^2.88.0"
   },
   "repository": {
     "type": "git",
