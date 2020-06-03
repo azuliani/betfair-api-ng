@@ -1,6 +1,6 @@
 {
   "name": "betfair-api-ng",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Betfair API-NG node.js",
   "main": "./lib/betfair.js",
   "scripts": {
