@@ -3,27 +3,11 @@
   "version": "1.0.7",
   "description": "Betfair API-NG node.js",
   "main": "./lib/betfair.js",
-  "scripts": {
-    "test": "mocha"
-  },
-  "keywords": [
-    "betfair",
-    "api-ng"
-  ],
   "author": "zoh <zoh@bk.ru>",
   "license": "MIT",
   "dependencies": {
-    "agentkeepalive": "^4.1.0",
-    "lodash": "^4.17.15",
-    "mocha": "^7.0.0",
-    "request": "^2.88.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/zoh/betfair-api-ng.git"
-  },
-  "devDependencies": {
-    "chai": "~1.10.0",
-    "nock": "~0.52.4"
+    "agentkeepalive": "^4.5.0",
+    "lodash": "^4.17.21",
+    "request": "^2.88.2"
   }
 }
