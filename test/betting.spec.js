@@ -1,93 +1,102 @@
-var expect = require('chai').expect;
-var _ = require('lodash');
-var nock = require('nock');
+var { describe, it, beforeEach, afterEach } = require('node:test');
+var assert = require('node:assert');
+var { MockAgent } = require('undici');
+var request = require('../lib/request');
 var Betting = require('../lib/betting');
 
-
 describe('Spec on betting api', function () {
-  var betting;
-  var sessionCfg = {
-    applicationKey: 'Lv3oIsDhPgiSUHVL',
-    token: 'test_token'
-  };
-  beforeEach(function () {
-    betting = Betting(sessionCfg);
-  });
+    var betting;
+    var mockAgent;
+    var sessionCfg = {
+        applicationKey: 'Lv3oIsDhPgiSUHVL',
+        token: 'test_token'
+    };
 
-  it('listCompetitions', function (done) {
-    var scope = nock('https://api.betfair.com/', {
-      reqheaders: {
-        'X-Application': sessionCfg.applicationKey,
-        'X-Authentication': sessionCfg.token,
-        'Content-Type': 'application/json'
-      }
-    })
-      .post('/exchange/betting/rest/v1.0/listCompetitions/', _.extend({filter: {}}, {locale: 'ru'}))
-      .reply(200, [{eventId: 1}]);
-
-    betting.listCompetitions({}, function (err, res) {
-      expect(err).to.not.true;
-      expect(res).to.be.eqls([{eventId: 1}]);
-      scope.done();
-      done();
-    }, 'ru')
-  });
-
-  it('listCountries', function (done) {
-    var scope = nock('https://api.betfair.com/', {
-      reqheaders: {
-        'X-Application': sessionCfg.applicationKey,
-        'X-Authentication': sessionCfg.token,
-        'Content-Type': 'application/json'
-      }
-    })
-      .post('/exchange/betting/rest/v1.0/listCountries/',
-      _.extend({filter: {eventId: 1}}, {locale: 'ru'}))
-      .reply(200, [{cntId: 1}]);
-
-    betting.listCountries({eventId: 1}, function (err, res) {
-      expect(err).to.not.true;
-      expect(res).to.be.eqls([{cntId: 1}]);
-      scope.done();
-      done();
-    }, 'ru')
-  });
-
-  it('listCurrentOrders', function (done) {
-    var scope = nock('https://api.betfair.com/', {
-      reqheaders: {
-        'X-Application': sessionCfg.applicationKey,
-        'X-Authentication': sessionCfg.token,
-        'Content-Type': 'application/json'
-      }
-    }).post('/exchange/betting/rest/v1.0/listCurrentOrders/', {})
-      .reply(200, {currentOrders: [], moreAvailable: false});
-
-    betting.listCurrentOrders(null, function (err, res) {
-      expect(err).to.not.true;
-      expect(res).to.be.eqls({currentOrders: [], moreAvailable: false});
-      scope.done();
-      done();
-    });
-  });
-
-  it('listMarketBook check marketIds', function () {
-    betting.listMarketBook(null, function (err, res) {
-      expect(err).to.be.eql('marketIds has been array with id"s');
-    });
-  });
-
-  describe('place new order', function () {
-    it('should check market id defined', function () {
-      betting.placeOrders(null, null, null, null,function (err, res) {
-        expect(err).to.be.eql('marketId has been defined');
-      });
+    beforeEach(function () {
+        mockAgent = new MockAgent();
+        mockAgent.disableNetConnect();
+        request._setDispatcher(mockAgent);
+        betting = Betting(sessionCfg);
     });
 
-    it('should check instructions for bets', function () {
-      betting.placeOrders('1.23234234', null, null, null,function (err, res) {
-        expect(err).to.be.eq('instructions for bets should be defined!');
-      });
+    afterEach(async function () {
+        await mockAgent.close();
     });
-  });
+
+    it('listCompetitions', async function () {
+        var mockPool = mockAgent.get('https://api.betfair.com');
+        mockPool.intercept({
+            path: '/exchange/betting/rest/v1.0/listCompetitions/',
+            method: 'POST'
+        }).reply(200, [{ eventId: 1 }], {
+            headers: { 'content-type': 'application/json' }
+        });
+
+        var res = await new Promise(function (resolve, reject) {
+            betting.listCompetitions({}, function (err, res) {
+                if (err) return reject(err);
+                resolve(res);
+            }, 'ru');
+        });
+
+        assert.deepStrictEqual(res, [{ eventId: 1 }]);
+    });
+
+    it('listCountries', async function () {
+        var mockPool = mockAgent.get('https://api.betfair.com');
+        mockPool.intercept({
+            path: '/exchange/betting/rest/v1.0/listCountries/',
+            method: 'POST'
+        }).reply(200, [{ cntId: 1 }], {
+            headers: { 'content-type': 'application/json' }
+        });
+
+        var res = await new Promise(function (resolve, reject) {
+            betting.listCountries({ eventId: 1 }, function (err, res) {
+                if (err) return reject(err);
+                resolve(res);
+            }, 'ru');
+        });
+
+        assert.deepStrictEqual(res, [{ cntId: 1 }]);
+    });
+
+    it('listCurrentOrders', async function () {
+        var mockPool = mockAgent.get('https://api.betfair.com');
+        mockPool.intercept({
+            path: '/exchange/betting/rest/v1.0/listCurrentOrders/',
+            method: 'POST'
+        }).reply(200, { currentOrders: [], moreAvailable: false }, {
+            headers: { 'content-type': 'application/json' }
+        });
+
+        var res = await new Promise(function (resolve, reject) {
+            betting.listCurrentOrders(null, function (err, res) {
+                if (err) return reject(err);
+                resolve(res);
+            });
+        });
+
+        assert.deepStrictEqual(res, { currentOrders: [], moreAvailable: false });
+    });
+
+    it('listMarketBook check marketIds', function () {
+        betting.listMarketBook(null, function (err) {
+            assert.strictEqual(err, 'marketIds has been array with id"s');
+        });
+    });
+
+    describe('place new order', function () {
+        it('should check market id defined', function () {
+            betting.placeOrders(null, null, null, null, null, null, function (err) {
+                assert.strictEqual(err, 'marketId has been defined');
+            });
+        });
+
+        it('should check instructions for bets', function () {
+            betting.placeOrders('1.23234234', null, null, null, null, null, function (err) {
+                assert.strictEqual(err, 'instructions for bets should be defined!');
+            });
+        });
+    });
 });

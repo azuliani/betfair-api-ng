@@ -5,9 +5,14 @@
   "main": "./lib/betfair.js",
   "author": "zoh <zoh@bk.ru>",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.spec.js"
+  },
   "dependencies": {
-    "agentkeepalive": "^4.5.0",
-    "lodash": "^4.17.21",
-    "request": "^2.88.2"
+    "lodash": "^4.17.23",
+    "undici": "^7.19.1"
   }
 }
